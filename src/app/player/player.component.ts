@@ -7,6 +7,10 @@ import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { environment } from '../../environments/environment';
 import { catchError, tap, switchAll } from 'rxjs/operators';
 import { EMPTY, Subject } from 'rxjs';
+
+import * as io from 'socket.io-client';
+
+
 export const WS_ENDPOINT = environment.wsEndpoint;
 
 @Component({
@@ -17,9 +21,16 @@ export const WS_ENDPOINT = environment.wsEndpoint;
 export class PlayerComponent implements OnInit {
 
   public form: FormGroup = {} as any;
-  private socket$!: WebSocketSubject<any>;
-  private messagesSubject$ = new Subject();
-  public messages$ = this.messagesSubject$.pipe(switchAll() as any, catchError(e => { throw e }));
+  private socket!: any;
+  initialized: boolean = false;
+  connected = false;
+  stats = {
+    initialized: '',
+    connected: '',
+  }
+
+  //public messages$ = this.messagesSubject$.pipe(switchAll() as any, catchError(e => { throw e }));
+
 
   constructor(
     private fb: FormBuilder
@@ -27,36 +38,64 @@ export class PlayerComponent implements OnInit {
 
   ngOnInit(): void {
 
-    this.form = this.fb.group({ playerId: new FormControl(this.loadPlayerId()) })
-
+    this.form = this.fb.group({ playerId: new FormControl(this.loadPlayerId()) });
+    this.initWebsocket();
   }
 
-  public connect(): void {
-    console.log('connect to websocket', WS_ENDPOINT, this.socket$);
-    if (!this.socket$ || this.socket$.closed) {
-      this.socket$ = webSocket(WS_ENDPOINT);
-      const messages = this.socket$.pipe(
-        tap(data => console.log('ws message:', data)),
-        tap({
-          error: error => console.log(error),
-        }), catchError(_ => EMPTY));
-      this.messagesSubject$.next(messages);
+  public initWebsocket(): void {
+    console.log('endpoint:', WS_ENDPOINT);
+    this.socket = io(WS_ENDPOINT);
+    this.socket.on('connect', () => {
+      console.log('socket connected:' + this.socket.connected, this.socket.id);
+
+      this.playerConnect();
+
+    })
+
+    const events = [
+      'player::registered',
+      'player::restart',
+      'program::updated',
+    ];
+
+    for (let event of events) {
+      console.log('register event:', event);
+      this.socket.on(event, (data: any) => {
+        console.log('-> ' + event, data)
+      });
     }
+
+
+
+    this.socket.io.on("reconnect", (data: any) => {
+      console.log('reconnect', data)
+    });
+
+    this.socket.on('error', (error: { message: any; }) => {
+      console.log('Socket cluster error:', error.message);
+    });
+
+    this.socket.on('disconnect', () => {
+      console.log(`Socket disconnected: ${this.socket.id}`);
+    });
+
+    this.socket.on('kickout', () => {
+      console.log(`Socket kicked out: ${this.socket.id}`);
+    });
+
+    this.initialized = true;
+    this.stats.initialized = '(initialized)'
   }
 
 
-  sendMessage(msg: any) {
-    this.socket$.next(msg);
-  }
 
-  close() {
-    this.socket$.complete();
-  }
+
 
 
   playerConnect() {
 
-    if (!this.socket$) this.connect();
+    //if (!this.socket) this.initWebsocket();
+
     const playerId = this.form.value.playerId;
     console.log('playerId:', playerId);
     this.savePlayerId(playerId);
@@ -89,7 +128,8 @@ export class PlayerComponent implements OnInit {
       "timezone": "GMT+00:00"
     };
 
-    this.sendMessage(message);
+    this.socket.emit('player:connect', message);
+    this.stats.connected = '(connected)'
   }
 
 
