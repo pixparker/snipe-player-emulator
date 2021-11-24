@@ -1,14 +1,50 @@
 <div class="wrapper" [formGroup]="form">
 
-    <div>
-        <span>Player: </span><input formControlName="playerId" />
+
+    <div class="row">
+        <div class="lable">Server Url: 
+            <span class="button" (click)="saveServerUrl()">Save</span> 
+            <span class="button" (click)="connectWebsocket()">Connect</span>             
+            <span class="button" (click)="disconnectWebsocket()">Disconnect</span>             
+        </div>
+        <input class="fw" formControlName="serverUrl" />
     </div>
 
-    <br>
-    <div class="button" (click)="initWebsocket()">Initi Websocket {{stats.initialized}}</div>
 
-    <br>
-    <div class="button" (click)="playerConnect()">player:connect {{stats.connected}}</div>
+    <div class="row">
+        <div class="lable">Mac Address: <span class="button" (click)="saveMacAddress()">Save</span> </div>
+        <input class="fw" formControlName="macAddress" />
+    </div>
+
+
+    <hr>
+
+
+    <div class="row">
+
+        <div>OTP: {{otp||'?'}}  |  <span class="button" (click)="requestOtp()">Request OTP</span> </div>
+
+    </div>
+
+
+    <div class="row">
+        <div class="lable">Player Id: 
+            <span class="button" (click)="savePlayerId()">Save</span> 
+            <span class="button" (click)="playerConnect()">Player Connect</span>
+        
+        </div>
+        <input class="fw" formControlName="playerId" />
+    </div>
+
+    <hr>
+
+    
+
+<br>
+<br>
+
+
+    
 
 
 
