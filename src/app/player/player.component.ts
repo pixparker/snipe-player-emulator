@@ -22,7 +22,7 @@ export class PlayerComponent implements OnInit {
 
   public form: FormGroup = {} as any;
   private socket!: any;
-  otp:string='';
+  otp: string = '';
 
   initialized: boolean = false;
   connected = false;
@@ -42,17 +42,17 @@ export class PlayerComponent implements OnInit {
 
   ngOnInit(): void {
 
-    this.form = this.fb.group({ 
-      playerId:new FormControl(this.loadPlayerId()),
+    this.form = this.fb.group({
+      playerId: new FormControl(this.loadPlayerId()),
       serverUrl: new FormControl(this.loadServerUrl()),
       macAddress: new FormControl(this.loadMacAddress()),
     });
-    
+
   }
 
   public connectWebsocket(): void {
 
-    let serverUrl=this.loadServerUrl()||'';    
+    let serverUrl = this.loadServerUrl() || '';
     this.socket = io(serverUrl);
     this.socket.on('connect', () => {
       console.log('socket connected:' + this.socket.connected, this.socket.id);
@@ -63,6 +63,7 @@ export class PlayerComponent implements OnInit {
       'player::registered',
       'player::restart',
       'program::updated',
+      'player::update',
     ];
 
     for (let event of events) {
@@ -93,8 +94,8 @@ export class PlayerComponent implements OnInit {
   }
 
 
-  public disconnectWebsocket(): void{
-this.socket.disconnect();
+  public disconnectWebsocket(): void {
+    this.socket.disconnect();
   }
 
 
@@ -139,34 +140,34 @@ this.socket.disconnect();
 
 
 
-  requestOtp(){
+  requestOtp() {
     const macAddress = this.form.value.macAddress;
     const serverUrl = this.form.value.serverUrl;
-    if(!macAddress) {
-      alert('mac address not found');      
+    if (!macAddress) {
+      alert('mac address not found');
       return;
     }
 
-    if(!serverUrl){
+    if (!serverUrl) {
       alert('server url not defined');
       return;
     }
 
 
 
-    this.http.post(`${serverUrl}/players/otp/request`,{
+    this.http.post(`${serverUrl}/players/otp/request`, {
       "name": macAddress,
-      "macAddress":macAddress,
+      "macAddress": macAddress,
       "ipAddress": "204.521.32.12",
       "description": "emulator screen"
-    }).pipe(take(1)).subscribe(data=>{
+    }).pipe(take(1)).subscribe(data => {
       this.otp = (data as any).result;
     })
   }
 
 
 
-  loadPlayerId(): string|null {
+  loadPlayerId(): string | null {
     return localStorage.getItem('playerId');
   }
 
@@ -175,8 +176,8 @@ this.socket.disconnect();
   }
 
 
-  loadServerUrl(): string|null {
-    return localStorage.getItem('serverUrl')||'http://localhost:7000/';
+  loadServerUrl(): string | null {
+    return localStorage.getItem('serverUrl') || 'http://localhost:7000/';
   }
 
   saveServerUrl() {
@@ -184,8 +185,8 @@ this.socket.disconnect();
   }
 
 
-  loadMacAddress(): string|null {
-    return localStorage.getItem('macAddress')|| 'emulator:a';
+  loadMacAddress(): string | null {
+    return localStorage.getItem('macAddress') || 'emulator:a';
   }
 
   saveMacAddress() {
